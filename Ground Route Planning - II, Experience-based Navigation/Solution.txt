@@ -92,10 +92,6 @@ while(norm(robotPos)~=norm(finishPos))
     newPos=robotPos;
     directionIndex=-1;
  
-    % Problem #1  
-    % directionIndex, i.e. determination of the direction of 
-    % the target relative to the robot
- 
    % decide direction
    
     if(abs(robotPos(1)-finishPos(1))>abs(robotPos(2)-finishPos(2))) %RightLeft Or UpDown
@@ -114,16 +110,7 @@ while(norm(robotPos)~=norm(finishPos))
     
     disp(directionIndex)
     
-    % Problem #2
-    % movementIndex, i.e. the selection of the best step for 
-    % the given direction from the rule table
-    
     [maxRuleVal, movementIndex]=max(ruleTable(directionIndex,:));
-    
-    
-    % Problem #3   
-    % the calculation of the new step, i.e. incrementing and 
-    % decrementing the row/column of the variable "newPos"
     
     switch(movementIndex)
         case moveRight
@@ -136,11 +123,6 @@ while(norm(robotPos)~=norm(finishPos))
             newPos(1)=newPos(1)+1;
     end
     
-    % Problem #4
-    % Distance Check 
-    % if we got close => confirm the rule 
-    % if we moved away => weaken the rule
-
     oldDistance=norm(robotPos-finishPos)
     newDistance=norm(newPos-finishPos)
     if(oldDistance>newDistance)
