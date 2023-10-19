@@ -1,0 +1,53 @@
+%% Train R-CNN
+clear all; close all; clc
+
+%% I copied the code that you showed us
+happyImgs = dir('happy*.png');
+happy_labels = categorical(repmat(0, numel(happyImgs), 1));
+
+sadImgs = dir('sad*.png');
+sad_labels = categorical(repmat(1, numel(sadImgs), 1));
+
+labels = [happy_labels; sad_labels;];
+imds = imageDatastore({'happy*.png' 'sad*.png'}, 'Labels', labels);
+
+figure
+numImages = length(imds.Files);
+perm = randperm(numImages, length(imds.Files));
+for i = 1:length(imds.Files)
+    subplot(2, length(imds.Files) / 2, i);
+    imshow(imds.Files{perm(i)});
+end % to iterate through each image
+
+%%
+[imdsTrain, imdsTest] = splitEachLabel(imds, 0.7, 'randomize');
+
+inputSize = [227 227 3];
+augmentedTrain = augmentedImageDatastore(inputSize, imdsTrain, 'ColorPreprocessing', 'gray2rgb');
+augmentedTest = augmentedImageDatastore(inputSize, imdsTest, 'ColorPreprocessing', 'gray2rgb');
+
+%% Network architecture
+net = alexnet; % Access to alexnet model. You have to install Deep Learning ToolBox for Alexnet
+layers = net.Layers; % Details oof architecture
+layers(end-2) = fullyConnectedLayer(2);
+layers(end) = classificationLayer;
+
+%% Training options
+options = trainingOptions('sgdm', ...
+    'MiniBatchSize', 10, ...
+    'MaxEpochs', 10, ...
+    'InitialLearnRate', 0.001, ...
+    'Shuffle', 'every-epoch', ...
+    'ValidationData', augmentedTest, ...
+    'ValidationFrequency', 10, ...
+    'Verbose', true, ...
+    'Plots', 'training-progress');
+
+%% Train the network
+net = trainNetwork(augmentedTrain, layers, options);
+
+%% Evaluate the network
+YPred = classify(net, augmentedTest);
+YTest = imdsTest.Labels;
+accuracy = sum(YPred == YTest) / numel(YTest);
+disp(['Accuracy: ' num2str(accuracy)]); % to evaluate performance of the network
