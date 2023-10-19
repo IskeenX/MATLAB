@@ -1,0 +1,88 @@
+%% Tested on MatLab 2023a 
+
+close all; clear all;
+warning('off','all');
+tic
+
+%% Pre-requisities
+
+% the wanted black&white image
+
+GA_TARGET = double(imresize(im2bw(imread('02.png'),0.5),[64 64])); 
+GA_POP_SIZE=1000;          % population size
+GA_MAX_ITER=500;           % max iteration
+GA_ELITE_RATE=0.1;         % elite rate for inheritance
+GA_MUTATION_RATE=0.0005;   % mutation rate
+   
+Generation = 0;
+visualizationInterval = 100;
+visualizationCount = 5; % To limit number of figures. Otherwise it could open like 500 figures which will slow your PC and it will be terrible to close them all
+visualizedGenerations = linspace(0, GA_MAX_ITER, visualizationCount);
+
+% Initial individuals
+Population = randi([0 1], size(GA_TARGET, 1), size(GA_TARGET, 2), GA_POP_SIZE);
+
+%% The Procedure
+
+% Until we reach the max iteration
+
+while Generation<GA_MAX_ITER
+    
+    % Calculating Goodness = Deviation from the Target Value
+    Fitness = sum(sum(abs(Population - repmat(GA_TARGET, [1, 1, GA_POP_SIZE]))), [1 2]);
+    
+     % Ordering with respect to the variable 'Fitness'
+    [~, sortedIdx] = sort(Fitness);
+    Population = Population(:, :, sortedIdx);
+    Fitness = Fitness(sortedIdx);   
+    
+    % Print out the best individual
+    fprintf('Generation: %d, Best Fitness: %.4f\n', Generation, Fitness(1));
+ 
+    if Fitness(1)==0
+        break;
+    end;
+
+    % Selection of the Elite individuals
+    eliteCount = round(GA_ELITE_RATE * GA_POP_SIZE);
+    elitePopulation = Population(:, :, 1:eliteCount);
+    
+    % Random cross-breeding
+
+    for i = eliteCount + 1:GA_POP_SIZE
+        parent1 = elitePopulation(:, :, randi(eliteCount)); % one of the parents
+        parent2 = elitePopulation(:, :, randi(eliteCount)); % the other parent
+        crossoverPointX = randi(size(GA_TARGET, 1)); % randomized cross-breeding
+        crossoverPointY = randi(size(GA_TARGET, 2));
+        Population(:, :, i) = [parent1(:, 1:crossoverPointY), parent2(:, crossoverPointY+1:end)];
+        Population(:, :, i) = [Population(1:crossoverPointX, :, i); Population(crossoverPointX+1:end, :, i)];
+                    
+    end
+
+    % Random Mutation, gene = pixel
+    mutationCount = round(numel(Population) * GA_MUTATION_RATE);
+    mutationIndices = randperm(numel(Population), mutationCount);
+    for i = 1:mutationCount
+        [mutX, mutY, mutZ] = ind2sub(size(Population), mutationIndices(i));
+        Population(mutX, mutY, mutZ) = 1 - Population(mutX, mutY, mutZ);
+    end
+    
+     % Visualize the best individual at specified generations
+    if ismember(Generation, visualizedGenerations)
+        bestIndividual = Population(:, :, 1);
+        figure; % You are going to see visualization of generation
+        imshow(bestIndividual); % I decided to add this part in order to see what actually we got
+        title(sprintf('Generation: %d, Best Fitness: %.4f', Generation, Fitness(1)));
+    end
+
+    Generation = Generation + 1;
+
+end % end of while loop
+
+% Visualize the best individual at the final generation
+bestIndividual = Population(:, :, 1);
+figure; % This is to get final generation where compiling has stopped
+imshow(bestIndividual); % If the compiler will stop before reaching VisualizationInterval = 100, it will not give us a final figure
+title(sprintf('Generation: %d, Best Fitness: %.4f', Generation, Fitness(1))); % So i made this part to get final generated figure
+
+toc
