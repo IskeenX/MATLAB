@@ -1,0 +1,62 @@
+%% Tested on MatLab 2023a
+
+clear all; close all; clc;
+
+%% Pre-requisities
+
+warning('off','all')       % warning turn-off
+tic
+GA_TARGET = 'Hello World'; % the wanted string
+GA_POP_SIZE=10000;         % population size
+GA_MAX_ITER=500;           % max iteration
+GA_ELITE_RATE=0.10;        % elite rate for inheritance
+GA_MUTATION_RATE=0.2;      % mutation rate (gen = character)
+   
+Generation = 0;
+
+% Initial characters, ASCII
+
+Population=randi([32 122], GA_POP_SIZE, length(GA_TARGET));
+
+%% The Procedure
+
+% Until we reach the max iteration
+while Generation<GA_MAX_ITER
+    
+    % Calculating Goodness = Deviation from the Target Value
+    Fitness = sum(abs(Population - repmat(double(GA_TARGET), GA_POP_SIZE, 1)), 2);
+
+    % Ordered with respect to the variable 'Fitness'
+    [~, sortedIdx] = sort(Fitness);
+    Population = Population(sortedIdx, :);
+    Fitness = Fitness(sortedIdx);
+    
+    % Print out the best individual
+    fprintf('Generation: %d, Best Individual: %s\n', Generation, char(Population(1, :)));
+    if Fitness(1)==0
+        break; % if found, exit
+    end
+    
+    % Elite individuals participating in inheritance
+    eliteCount = round(GA_ELITE_RATE * GA_POP_SIZE);
+    elitePopulation = Population(1:eliteCount, :);
+
+    % Random cross-breeding
+    for i = eliteCount + 1:GA_POP_SIZE
+        parent1 = elitePopulation(randi(eliteCount), :); % one of the parents 
+        parent2 = elitePopulation(randi(eliteCount), :); % the other parent
+        crossoverPoint = randi(length(GA_TARGET)); % randomized genes
+        Population(i, :) = [parent1(1:crossoverPoint), parent2(crossoverPoint+1:end)];      
+    end
+
+    % mutation, only 1-1 random gene is mutated in the entire population!
+    mutationCount = round(length(Population(:)) * GA_MUTATION_RATE);
+    mutationIndices = randperm(length(Population(:)), mutationCount);
+    for i = 1:mutationCount
+        geneIndex = mutationIndices(i);
+        Population(geneIndex) = randi([32 122]);
+    end
+    Generation = Generation + 1;
+
+end % end of while loop
+toc
