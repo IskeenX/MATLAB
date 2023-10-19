@@ -1,0 +1,68 @@
+% Problem 1
+clc
+clear
+disp("Problem 1")
+X = [1 2 3; 4 5 6; 7 8 9];
+
+% To find the maximum and minimum value
+Xmax = max(max(X));
+Xmin = min(min(X));
+
+% To find indexes of the values
+[minX,minY] = find(X == Xmin);
+[maxX,maxY] = find(X == Xmax) % Task says to print max values
+
+% Printing everything (row, column)
+fprintf("Maximum Value - Index\n")
+disp([maxX,maxY])
+disp(Xmax)
+
+fprintf("Minimum Value - Index\n")
+disp([minX,minY])
+disp(Xmin)
+
+% Problem 2
+clc
+clear
+disp("Problem 2")
+X = [1 2 3; 4 5 6; 7 8 9]
+
+% Rearranging components
+Y = reshape([1 9 2; 8 3 7; 4 6 5], [3, 3]) % (value, size) of matrix
+
+% Printing out by indices
+disp(num2str(X(1,3))) % 3 (it just converts the number to char)
+
+fprintf('\nAt X(%d,%d) = %d\n', 2, 3, X(2,3)) % 6 (String concatenation)
+
+% Iterate over each row and column
+for i = 1:size(X, 1) % returns the rows
+    for j = 1:size(X, 2) % returns the columns
+        fprintf('X(%d,%d) = %d\n', i, j, X(i,j)); 
+    end
+end
+
+% Problem 3
+clc
+clear
+disp("Problem 3")
+X = eye(10);
+
+% Row, moves by y-axis
+for y = 1:length(X)
+    % Column, moves by x-axis
+    for x = 1:length(X)
+        if X(x, y) == 1
+            X(x, y) = 2; % Sets values of 2
+            if X(x, y) == 2 % Sets values of -1
+                X(x + 1, y) = -1;
+                X(x, y + 1) = -1;  
+            end
+        end
+    end
+end
+
+X(end,:) = []; % Removes last row
+X(:,end) = [];  % Removes last column
+
+disp(X)
